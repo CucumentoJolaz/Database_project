@@ -1,0 +1,23 @@
+
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+Форма входа
+{% endblock %}
+{% block content %}
+    <div class="container mt-4">
+      <div class="row">
+        <div class="col">
+          <h1>Форма авторизации</h1>
+          <form method="post">
+              {{ form.as_p }}
+              {% csrf_token %}
+
+            <button class="btn btn-primary" type="submit">Авторизоваться</button>
+          </form>
+      </div>
+     </div>
+    </div>
+{% endblock %}

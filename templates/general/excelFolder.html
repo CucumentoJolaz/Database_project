@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %} Первая основная директория {% endblock %}
+
+{% block content %}
+
+    <h2> Заголовок директории</h2>
+    <p>  </p>
+    <table class="table mb-0">
+        <thead>
+        <tr>
+            <th>Title</th>
+            <th>Creator</th>
+            <th>Date and time of creation</th>
+            <th>Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for folder in folders %}
+            <tr>
+                <td>{{ folder.title }}</td>
+                <td>{{ folder.author }}</td>
+                <td>{{ folder.creationDate }}</td>
+                <td>
+                    <form method="post" action="">
+                        {% csrf_token %}
+
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+
+        {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}
+{% block navBarAdd %}
+
+
+        <form action = "{% url 'uploadExcelFile'  folderType prFoldId %}" method = "POST" class="form-inline my-2 my-lg-0" enctype="multipart/form-data">
+        {% csrf_token %}
+            <!--<input type = "file" name = "document">-->
+            {{ excelFileForm }}
+            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Загрузить</button>
+        </form>
+
+{% endblock %}

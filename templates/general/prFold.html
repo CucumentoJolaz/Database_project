@@ -1,0 +1,286 @@
+<!-- This HTML file is essencial for sustainable work of the database-cite
+It begins with creating a base for itself extending base.html file-->
+{% extends 'base.html' %}
+<!-- loading static data. From General, accounts and tables apps -->
+{% load static %}
+<!-- Inserting title of folder in to a head of the HTML-->
+{% block title %} {{ folderTitle }} {% endblock %}
+
+<!-- primal block of content -->
+
+{% block content %}
+    <!-- importing style css file from general/static/general/css-->
+    <link href="{% static "general/css/style.css" %}" rel="stylesheet" type="text/css">
+    <h2>{{ folderTitle }}</h2>
+    </br>
+    <!-- This button is supposed to bring a customer back, at a previous page in the hierarchy-->
+    <div class="float-right">
+        <a href="/{{ previousFolder }}" class="btn btn-info" role="button">Назад</a>
+    </div>
+    <!-- this form is supposed to create new folder inside of database. action leads to newExcelFolder method in general.views-->
+    <form action="{% url 'newExcelFolder' %}" method="POST" class="form-inline my-2 my-lg-0"
+          enctype="multipart/form-data">
+        {% csrf_token %}
+        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Создать новую папку</button>
+        {{ excelNewFolderForm }}
+    </form>
+    <table class="table mb-0">
+        <thead>
+        <tr>
+            <th></th>
+            <th>Файл</th>
+            <th>Создатель</th>
+            <th>Дата создания</th>
+            <th>Переименовать</th>
+            <th>Удалить</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% if folders %}
+            {% for folder in folders %}
+                {% if not folder.deleted %}
+
+                    <tr>
+                        <td>
+                            <input type="checkbox" id="checkbox_{{ folder.UID }}" name="checkbox_{{ folder.UID }}">
+                        </td>
+                        <form method="post" action="{% url 'renameExcelFolder' folder.pk %}">
+                            <td>
+                                <a href="{{ folder.UID }}"> {{ folder.title }}</a>
+                                </br>
+
+                            </td>
+                            <td>{{ folder.author }}</td>
+                            <td>{{ folder.creationDate }}</td>
+                            <td>
+
+                                {% csrf_token %}
+                                <input name="path" type=hidden value="{{ foldPath }}">
+                                <input name="newTitle" placeholder="Введите новое название" value="{{ file.title }}">
+                                <button type="submit" class="btn btn-success btn-sm">Обновить</button>
+                            </td>
+                        </form>
+
+                        <td>
+                            <form method="post" action="{% url 'deleteExcel' folder.pk 'folder' %}">
+                                {% csrf_token %}
+                                <input name="path" type=hidden value="{{ foldPath }}">
+                                <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        {% if files %}
+            {% for file in files %}
+                {% if not file.deleted %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" id="checkbox_{{ file.UID }}" name="checkbox_{{ file.UID }}">
+                        </td>
+                        <td>
+                            <a href="/downloadExcelFile/{{ file.pk }}">{{ file.title }} </a>
+                            </br>
+
+                        </td>
+                        <td>{{ file.author }}</td>
+                        <td>{{ file.creationDate }}</td>
+                        <td>
+                            <form method="post" action="{% url 'renameExcelFile' file.pk %}">
+                                <input name="newTitle" placeholder="Введите новое название">
+                                {% csrf_token %}
+                                <input name="path" type=hidden value="{{ foldPath }}">
+                                <button id="rename_{{ file.UID }}" type="submit" class="btn btn-success btn-sm">
+                                    Обновить
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <form method="post" action="{% url 'deleteExcel' file.pk 'file' %}">
+                                {% csrf_token %}
+                                <input name="path" type=hidden value="{{ foldPath }}">
+                                <button id="delete_{{ file.UID }}" type="submit" class="btn btn-danger btn-sm">Удалить
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        </tbody>
+    </table>
+
+
+
+{% endblock %}
+{% block tableContent %}
+    {% if tableType == 'rawMaterialsTable' %}
+        <table class="table mb-0">
+            <h2>{{ tableType }}
+                <div class="float-right">
+                    <form action="{% url 'newRawMaterial' %}"
+                          method="POST" class="form-inline my-2 my-lg-0"
+                          enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <button class="btn btn-primary" type="submit">Внести новый исходный материал</button>
+                        <input name="path" type=hidden value="{{ foldPath }}">
+                    </form>
+                </div>
+            </h2>
+            <thead>
+            <tr>
+                <th>№ п/п</th>
+                <th>Статус</th>
+                <th>Название</th>
+                <th>Уникальный номер (UID)</th>
+                <th>Документы</th>
+                <th>Исходное количество [кг]</th>
+                <th>Доступное количество [кг]</th>
+                <th>Дата регистрации</th>
+                <th>Стоимость [тыс.руб]</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if tables %}
+                {% for table in tables %}
+                    {% if not table.deleted %}
+                        <tr>
+                            <td>{{ table.pk }}</td>
+                            <td>{{ table.status }}</td>
+                            <td>
+
+                                <a href="{% url 'updateRawMaterial' table.pk %}"> {{ table.title }}</a>
+                            </td>
+                            <td>{{ table.UID }}</td>
+                            <td>{{ pass }}</td>
+                            <td>{{ table.originalAmount }}</td>
+                            <td>{{ table.availableAmount }}</td>
+                            <td>{{ table.creationDate.date }}</td>
+                            <td>{{ table.cost }}</td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            </tbody>
+        </table>
+    {% endif %}
+    {% if tableType == 'equipmentTable' %}
+        <table class="table mb-0">
+            <h2>{{ tableType }}
+                <div class="float-right">
+                    <form action="{% url 'newEquipment' %}"
+                          method="POST" class="form-inline my-2 my-lg-0"
+                          enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <button class="btn btn-primary" type="submit">Внести новое оборудование</button>
+                        <input name="path" type=hidden value="{{ foldPath }}">
+                        <input name="test" type=hidden value="hello pidor">
+                    </form>
+                </div>
+            </h2>
+            <thead>
+            <tr>
+                <th>№ п/п</th>
+                <th>Название</th>
+                <th>Уникальный номер (UID)</th>
+                <th>Документы</th>
+                <th>Дата регистрации</th>
+                <th>Производительность [кг/час]</th>
+                <th>Стоимость эксплуатации [тыс.руб/ч]</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if tables %}
+                {% for table in tables %}
+                    {% if not table.deleted %}
+                        <tr>
+                            <td>{{ table.pk }}</td>
+                            <td>
+                                <a href="{{ table.UID }}"> {{ table.title }}</a>
+
+                            </td>
+                            <td>{{ table.UID }}</td>
+                            <td>{{ pass }}</td>
+                            <td>{{ table.creationDate.date }}</td>
+                            <td>{{ table.productivity }}</td>
+                            <td>{{ table.exploitationCost }}</td>
+                        </tr>
+
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            </tbody>
+        </table>
+    {% endif %}
+    {% if tableType == 'subcomponentsTable' %}
+        <table class="table mb-0">
+            <h2>{{ tableType }}
+                <div class="float-right">
+                    <form action="{% url 'newSubcomponent' %}"
+                          method="POST" class="form-inline my-2 my-lg-0"
+                          enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <button class="btn btn-primary" type="submit">Создать новый компонент</button>
+                        <input name="path" type=hidden value="{{ foldPath }}">
+                    </form>
+                </div>
+            </h2>
+            <thead>
+            <tr>
+                <th>№ п/п</th>
+                <th>Статус</th>
+                <th>Автор</th>
+                <th>Название</th>
+                <th>Уникальный номер (UID)</th>
+                <th>Документы</th>
+                <th>Время изготовления [ч]</th>
+                <th>Исходное количество [кг]</th>
+                <th>Доступное количество [кг]</th>
+                <th>Цена [тыс. руб/кг]</th>
+                <th>Дата регистрации</th>
+                <th>Где использовано (UID)</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if tables %}
+                {% for table in tables %}
+                    {% if not table.deleted %}
+                        <tr>
+                            <td>{{ table.pk }}</td>
+                            <td>{{ table.status }}</td>
+                            <td>{{ table.author }}</td>
+                            <td>
+                                <a href="{% url 'updateSubcomponent' table.pk %}"> {{ table.title }}</a>
+                            </td>
+                            <td>{{ table.UID }}</td>
+                            <td>{{ pass }}</td>
+                            <td>{{ table.creationTime }}</td>
+                            <td>{{ table.originalAmount }}</td>
+                            <td>{{ table.availableAmount }}</td>
+                            <td>{{ table.cost }}</td>
+                            <td>{{ table.creationDate.date }}</td>
+                            <td>{{ pass }}</td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            </tbody>
+        </table>
+
+    {% endif %}
+{% endblock %}
+
+{% block navBarAdd %}
+
+
+    <form action="{% url 'uploadExcelFile' %}" method="POST" class="form-inline my-2 my-lg-0"
+          enctype="multipart/form-data">
+        {% csrf_token %}
+        <!--<input type = "file" name = "document">-->
+        {{ excelFileForm }}
+
+        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Загрузить файл</button>
+    </form>
+
+{% endblock %}

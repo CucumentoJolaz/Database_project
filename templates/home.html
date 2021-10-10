@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Home{% endblock %}
+
+{% block head_config %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equip="X-UA-Compatible" content="ie=edge">
+    <!--<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"> -->
+    <!-- <link rel="stylesheet" href="css/style.css"> -->
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col">
+            <p><a href="prFold"> Перейти к базе данных</a></p>
+        </div>
+        <div class="col">
+            Hi {{ user.username }}!
+            <p><a href="{% url 'logout' %}">Log Out</a></p>
+            <p><a href="{% url 'password_reset' %}">Reset Password</a></p>
+            <p><a href="{% url 'signup' %}">go to signup</a></p>
+        </div>
+    </div>
+
+
+
+
+{% endblock %}
