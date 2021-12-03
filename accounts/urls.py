@@ -6,7 +6,6 @@ from accounts.forms import UserLoginForm
 
 urlpatterns = [
     path('signup/', SignUpView.as_view(), name='signup'),
-
     path('login/',
     views.LoginView.as_view(
             template_name="registration/login.html",

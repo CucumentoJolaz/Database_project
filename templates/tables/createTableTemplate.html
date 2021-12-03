@@ -1,13 +1,17 @@
-{% extends 'base.html' %}
-
+{% extends 'general/base_general.html' %}
 {% load static %}
 
 {% block title %} Создание нового компонента {% endblock %}
 
 {% block content %}
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p}}
-    <button type="submit" class="btn btn-primary">Создать объект</button>
-  </form>
+    <div class="float-right">
+        <a href="/{{ pathBack }}" class="btn btn-info" role="button">Отменить</a>
+    </div>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="hidden" name="path" value= {{ path }}>
+        <input type="hidden" name="pathBack" value= {{ pathBack }}>
+        <button type="submit" class="btn btn-primary">Создать объект</button>
+    </form>
 {% endblock %}

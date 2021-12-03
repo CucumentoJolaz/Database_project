@@ -3,6 +3,7 @@ from .models import excelFolder, excelFile
 import os
 from config.settings import MEDIA_ROOT
 from general.functions import getUID
+from general.db_init import createDir
 
 class NameForm(forms.Form):
     your_name = forms.CharField(label='your name', max_length=100)
@@ -42,12 +43,15 @@ class excelFolderForm(forms.ModelForm):
             #'path': forms.TextInput(attrs={'placeholder': 'Введите название новой директории'}),
         }
 
-    def save(self, commit=True):
+    def save(self, author, commit=True):
         instance = super(excelFolderForm, self).save(commit=False)
         newUID = getUID()
         instance.UID = newUID
-        os.mkdir(os.path.join(MEDIA_ROOT, instance.path, newUID))
+        instance.author = author
+        createDir("/".join([instance.path, newUID]))
         q = excelFolder.objects.get(UID=instance.path.rsplit("/")[-1])  # ищем ту директорию, в которую созраняется файл
+        print(q, type(q))
+
         instance.parentFolder = q  # присваиваем файл к данной директории
         if commit:
             instance.save()

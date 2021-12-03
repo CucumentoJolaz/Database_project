@@ -3,7 +3,6 @@ import os
 import shutil
 from config.settings import MEDIA_ROOT
 
-
 def content_file_name(instance, UID):
     """ this function has to return the location to upload the file """
     return os.path.join('%s/%s' % (instance.path, instance.UID))
@@ -15,7 +14,7 @@ class UIDlist(models.Model):
     def __str__(self):
         return self.UID
 
-# abstract folder - paternal abstract class for several different instanses of data structures in the database cite
+# abstract folder - paternal abstract class for several different instances of data structures in the database cite
 class abstractFolder(models.Model):
     class Meta():
         abstract = True
@@ -25,8 +24,11 @@ class abstractFolder(models.Model):
     creationDate = models.DateTimeField(auto_now_add = True)
     UID = models.CharField(max_length=300,  default = "")
     tableName = models.CharField(max_length=300, default = "") #this field tells a folder about table fields, which contains the folder
-    parentFolder = models.ForeignKey('self', on_delete=models.DO_NOTHING, default = 2)
+    parentFolder = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
     deleted = models.BooleanField(default = False)
+    description = models.TextField(default = "")
+
+
     def __str__(self):
         return self.title
     #complete removal of all info, files, folders and traces of the folder.
@@ -41,10 +43,8 @@ class abstractFolder(models.Model):
         fileDeletion = excelFile.objects.filter(path__startswith=self.path + "/" + self.UID)
         folderDeletion.delete()
         fileDeletion.delete()
-
         q = UIDlist.objects.filter(UID=self.UID)
         q.delete()
-
         super().delete(*args, **kwargs)
 
     #Just mark a file or folder as "deleted" in database, without, actually, deleting that irreversely
@@ -61,6 +61,8 @@ class abstractFolder(models.Model):
     def rename(self, newTitle):
         self.title = newTitle
         self.save()
+
+
 
 class excelFolder(abstractFolder):
     pass

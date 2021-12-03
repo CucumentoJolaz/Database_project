@@ -1,77 +1,98 @@
-from django.views.generic import CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.conf import settings
+from django.http import HttpResponseNotFound
+from django.shortcuts import render, redirect, get_object_or_404
+
+import tables.tableCheckFunctions as tc
 from general.forms import excelFileForm
-from tables.models import equipmentTable
 from general.models import excelFile
-from general.functions import pathCalculation
-# Create your views here.
-class createTableView(LoginRequiredMixin, CreateView):
-    http_method_names = ['post']
-    template_name = 'tables/createTableTemplate.html'
-    def form_valid(self, form):
-        author = self.request.user.get_username()
-        form.instance.author = author
-        return super(createTableView, self).form_valid(form)
-
-    def get_success_url(self, **kwargs):
-        return '/' + self.request.POST['path']
 
 
-class updateTableView(LoginRequiredMixin, UpdateView):
-    template_name = 'tables/updateTableTemplate.html'
-    fileFormClass = excelFileForm
-    fileFormModel = excelFile
-    folderUID = ""
-    folderPath = ""
-    fullPath = ""
+def createProcessingView(request, **kwargs):
+    """creating new instance of table"""
+    if not request.user.is_authenticated:
+        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+    else:
+        tableInfoProc = tc.tableInfoProcessor()
 
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        self.folderPath = self.object.path
-        self.folderUID = self.object.UID
-        self.fullPath = self.folderPath + "/" + self.folderUID
-        #return super().get(request, *args, **kwargs)
-        #print(self.get_template_names())
-        return self.render_to_response(self.get_context_data())
+        viewForm = tableInfoProc.tableTypeForm(kwargs['tableType'])
+        if request.method == 'POST':
+            formData = viewForm(request.POST)
+            if formData.is_valid():
+                formData.path = request.POST['path']
+                formData.save(author=request.user.get_username())
+            return redirect("/" + request.POST['pathBack'])
 
-    # def get(self, request, *args, **kwargs):
-    #     form = self.form_class
-    #     fileForm = self.fileFormClass
-    #     self.object = self.get_object()
-    #
-    #     self.pk = kwargs['pk']
-    #     return self.render_to_response(self.get_context_data(
-    #         object=self.object, form=form, fileForm=fileForm, model = self.model))
-
-    def get_context_data(self,  **kwargs):
-        context = super(updateTableView, self).get_context_data(**kwargs)
-        context['previousFolder'] = self.folderPath
-        context['path'] = self.fullPath
-        context['excelFileForm'] = self.fileFormClass
-        context['files'] = excelFile.objects.filter(path=self.fullPath).order_by('title')
-        context['folderTitle'] = self.object.title
-        return context
+        formData = viewForm()
+        if 'path' in request.GET and 'pathBack' in request.GET:
+            return render(request, 'tables/createTableTemplate.html', {'form': formData,
+                                                                       'path': request.GET['path'],
+                                                                       'pathBack': request.GET['pathBack']})
+        else:
+            return redirect('home')
 
 
-    def form_valid(self, form, **kwargs):
-        self.path = form.instance.path + "/" + form.instance.UID
-        return super(updateTableView, self).form_valid(form)
+def updateProcessingView(request, **kwargs):
+    """Updating table instance"""
+    if not request.user.is_authenticated:
+        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+    else:
+        tableInfoProc = tc.tableInfoProcessor()
 
-    def get_success_url(self, **kwargs):
-        return '/' + self.path
+        viewForm = tableInfoProc.tableTypeFormUpdate(kwargs['tableType'])
+        viewModel = tableInfoProc.tableTypeModel(kwargs['tableType'])
+
+        if request.method == 'POST':
+            instance = get_object_or_404(viewModel, UID=kwargs['UID'])
+            form = viewForm(request.POST, instance=instance)
+            if form.is_valid():
+                form.save()
+            return redirect("/" + request.POST['pathBack'])
+
+        if request.method == 'GET':
+            modelData = viewModel.objects.get(UID=kwargs['UID'])
+            form = viewForm(instance=modelData)
+            renderDict = {'path': f"tables/update/{kwargs['tableType']}/{modelData.UID}",
+                          'pathBack': f"{modelData.path}",
+                          'fileUploadPath': f"{modelData.path}/{modelData.UID}",
+                          'excelFileForm': excelFileForm,
+                          'files': excelFile.objects.filter(path=f"{modelData.path}/{modelData.UID}").order_by('title'),
+                          'object': modelData,
+                          'form': form,
+                          'tableTypeRedirect': kwargs['tableType']
+                          }
+            return render(request, 'tables/updateTableTemplate.html', renderDict)
 
 
-class deleteTableView(LoginRequiredMixin, DeleteView):
+def deleteProcessingView(request, **kwargs):
+    """Deleting table instance"""
+    if not request.user.is_authenticated:
+        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+    else:
+        tableInfoProc = tc.tableInfoProcessor()
 
-    def delete(self, request, *args, **kwargs):
-        """
-        Call the delete() method on the fetched object and then redirect to the
-        success URL.
-        """
-        self.object = self.get_object()
-        pathBack = self.object.path
-        success_url = pathBack
-        self.object.falseDeletion()
-        return HttpResponseRedirect(success_url)
+        viewModel = tableInfoProc.tableTypeModel(kwargs['tableType'])
+        if request.method == 'POST':
+            modelData = viewModel.objects.get(UID=kwargs.get('UID'))
+            modelData.falseDeletion()
+
+        return redirect("/" + request.POST['pathBack'])
+
+def approveTable(request, tableType, pk):
+    if not request.user.is_authenticated:
+        return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+    else:
+        if request.method == 'POST':
+            tableInfoProc = tc.tableInfoProcessor()
+
+            table = tableInfoProc.tableTypeModel(tableType)
+            if table:
+                query = table.objects.filter(pk=pk)
+                if query:
+                    objectToApprove = query[0]
+                    objectToApprove.approved = True
+                    objectToApprove.save()
+                    return redirect(request.POST['pathBack'])
+                else:
+                    return HttpResponseNotFound("Object not found.")
+            else:
+                return HttpResponseNotFound("Wrong table type request.")

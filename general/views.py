@@ -5,11 +5,12 @@ from django.core.files.storage import FileSystemStorage
 import mimetypes
 from general.models import excelFolder, excelFile
 from general.forms import excelFileForm, excelFolderForm
+from config.settings import MEDIA_ROOT
 import general.functions as genFunc
-
-
-
-# функция генерации случайных номеров, без проверки их уникальности
+import general.db_init as dbIn
+import tables.tableCheckFunctions as tc
+import boto3
+import os
 
 
 def test(request):
@@ -17,6 +18,7 @@ def test(request):
 
 
 def home(request):
+    """View with home template rendering"""
     if not request.user.is_authenticated:
         return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
     else:
@@ -25,53 +27,66 @@ def home(request):
 
 # main folder evaluation
 def prFold(request, *args, **kwargs):
+    """Main function of 'general' app. Generate a 'folder' with it's belongings like tables, files and folders."""
     if not request.user.is_authenticated:
         return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
     else:
+        # checking if database initialised correctly
+        if not dbIn.dbCheckInit():
+            dbIn.dbInit()
         # this function is supposed to calculate three variables - full path to the folder, it's name and name + path.
         folderUID, folderPath, fullPath = genFunc.pathCalculation(**kwargs)
+
         # Handling main folder structure
-        theFolderObject = genFunc.mainFoldStruct(folderUID = folderUID, folderPath = folderPath)
+        foldersTree = genFunc.mainFoldStruct(folderUID=folderUID, folderPath=folderPath)
+        theFolderObject = foldersTree[0]
+        treeTitlesLinks = genFunc.namesLinksFolder(foldersTree)
         # checking if main folder contains any table inside
         # and taking table data if it is
-        tables = genFunc.getTablesInfo(theFolderObject)
-        #handling info about files and folders inside of the main folder
+        tableInfoProc = tc.tableInfoProcessor()
+
+        tables = tableInfoProc.getTablesInfo(theFolderObject)
+        tableType = theFolderObject.tableName.replace("Table", "")
+        # handling info about files and folders inside of the main folder
         folders = excelFolder.objects.filter(path=fullPath).order_by('title')
         files = excelFile.objects.filter(path=fullPath).order_by('title')
-        #file upload and new folder creation in main forder forms
-        # handling all files, folders and tables, which lies inside of the main folder
-        fileForm = excelFileForm(initial={'path': fullPath})
-        folderForm = excelFolderForm(initial={'path': fullPath, 'author': request.user.get_username()}, )
         return render(request, 'general/prFold.html', {
             'folders': folders,  # all directories inside of this directory
-            'excelFileForm': fileForm,  # file download form
-            'excelNewFolderForm': folderForm,  # folder creation form
             'foldPath': fullPath,  # full path to this directory
             'files': files,  # all files inside of this directory
-            'folderTitle': theFolderObject.title,
-            'tables': tables,
-            'tableType': theFolderObject.tableName,
+            'theFolderObject': theFolderObject,
+            'tables': tables,  # equipment, materials, organisations etc.
             'previousFolder': folderPath,  # path to previous directory
+            'pathBack': fullPath,  # tell the template it's parent
+            'treeTitlesLinks': treeTitlesLinks,
+            'tableTypeRedirect': tableType
         })
 
 
-# Form creation function for new folders
 def newExcelFolder(request):
+    """ Form creation function for new folders"""
     if not request.user.is_authenticated:
         return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
     else:
         if request.method == 'POST':
             form = excelFolderForm(request.POST)
             if form.is_valid():
-                form.save()
+                form.save(author=request.user.get_username())
             else:
                 print(form.is_valid())
-            return redirect(request.POST['path'])
+            return redirect(request.POST['pathBack'])
+
+        form = excelFolderForm()
+        if 'path' in request.GET and 'pathBack' in request.GET:
+            return render(request, 'general/createFolder.html', {'excelFolderForm': form,
+                                                                 'path': request.GET['path'],
+                                                                 'pathBack': request.GET['pathBack']})
         else:
             return redirect('home')
 
 
 def uploadExcelFile(request):
+    """Uploading new file into a folder"""
     if not request.user.is_authenticated:
         return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
     else:
@@ -84,12 +99,19 @@ def uploadExcelFile(request):
                           )
             else:
                 print("Form is not valid")
-            return redirect(request.POST['path'])
+            return redirect(request.POST['pathBack'])
+
+        form = excelFileForm()
+        if 'path' in request.GET and 'pathBack' in request.GET:
+            return render(request, 'general/uploadFile.html', {'excelFileForm': form,
+                                                               'path': request.GET['path'],
+                                                               'pathBack': request.GET['pathBack']})
         else:
-            return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+            redirect('home')
 
 
 def deleteExcel(request, pk, type):
+    """Deleting file from the structure"""
     if not request.user.is_authenticated:
         return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
     else:
@@ -102,8 +124,10 @@ def deleteExcel(request, pk, type):
                 book.falseDeletion()
             else:
                 return redirect('home')
-
-        return redirect("/" + request.POST['path'])
+            # Костыль костылём
+            if request.POST['pathBack'].split('/')[0] == 'prFold':
+                return redirect('/' + request.POST['pathBack'])
+            return redirect(request.POST['pathBack'])
 
 
 def renameExcelFile(request, pk):
@@ -112,12 +136,12 @@ def renameExcelFile(request, pk):
     else:
         if request.method == 'POST':
             book = excelFile.objects.get(pk=pk)
-            if request.POST['newTitle'] != "":
+            if 'newTitle' in request.POST:
                 book.rename(request.POST['newTitle'])
-            if request.POST['additionalInfo'] != "":
+            if 'additionalInfo' in request.POST:
                 book.additionalInfo = request.POST['additionalInfo']
-                book.save()
-        return redirect("/" + request.POST['path'])
+            book.save()
+        return redirect("/" + request.POST['pathBack'])
 
 
 def renameExcelFolder(request, pk):
@@ -128,7 +152,7 @@ def renameExcelFolder(request, pk):
             if request.POST['newTitle'] != "":
                 book = excelFolder.objects.get(pk=pk)
                 book.rename(request.POST['newTitle'])
-        return redirect("/" + request.POST['path'])
+        return redirect("/" + request.POST['pathBack'])
 
 
 def downloadExcelFile(request, pk):
@@ -139,13 +163,20 @@ def downloadExcelFile(request, pk):
         fileName = file.title
         filePath = file.path + "/" + file.UID
         mime_type, _ = mimetypes.guess_type(filePath)
+        bufferFileName = os.path.join(MEDIA_ROOT, "buffer", fileName)
+
+        BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
+        s3 = boto3.resource('s3')
+        bucket = s3.Bucket(BUCKET_NAME)
+        bucket.download_file(filePath, bufferFileName)
+
         fs = FileSystemStorage()
-        if fs.exists(filePath):
-            with fs.open(filePath) as file:
+        if fs.exists(bufferFileName):
+            with fs.open(bufferFileName) as file:
+                mime_type, _ = mimetypes.guess_type(bufferFileName)
                 response = HttpResponse(file, content_type=mime_type)
                 response['Content-Disposition'] = 'attachment; filename="' + fileName + '"'
+                os.remove(bufferFileName)
                 return response
         else:
             return HttpResponseNotFound('The file wasnt found at the server')
-
-        return redirect("/" + file.path)
