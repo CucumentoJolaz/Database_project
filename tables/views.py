@@ -44,9 +44,11 @@ def updateProcessingView(request, **kwargs):
         if request.method == 'POST':
             instance = get_object_or_404(viewModel, UID=kwargs['UID'])
             form = viewForm(request.POST, instance=instance)
+            updateMessage="Не получилось обновить компонент."
             if form.is_valid():
                 form.save()
-            return redirect("/" + request.POST['pathBack'])
+                updateMessage="Компонент успешно обновлён!"
+            return redirect(f"/{request.POST['pathBack']}?updateMessage={updateMessage}")
 
         if request.method == 'GET':
             modelData = viewModel.objects.get(UID=kwargs['UID'])
@@ -54,11 +56,13 @@ def updateProcessingView(request, **kwargs):
             renderDict = {'path': f"tables/update/{kwargs['tableType']}/{modelData.UID}",
                           'pathBack': f"{modelData.path}",
                           'fileUploadPath': f"{modelData.path}/{modelData.UID}",
+
                           'excelFileForm': excelFileForm,
                           'files': excelFile.objects.filter(path=f"{modelData.path}/{modelData.UID}").order_by('title'),
                           'object': modelData,
                           'form': form,
-                          'tableTypeRedirect': kwargs['tableType']
+                          'tableTypeRedirect': kwargs['tableType'],
+                          'updateMessage': request.GET.get('updateMessage', '')
                           }
             return render(request, 'tables/updateTableTemplate.html', renderDict)
 

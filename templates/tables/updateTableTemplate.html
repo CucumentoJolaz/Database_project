@@ -3,42 +3,90 @@
 {% load static %}
 
 
-{% block title %}Создание нового компонента {% endblock %}
+{% block title %}Модификация {{ object.title }}{% endblock %}
 
 {% block content %}
-    <h2>{{ modelData.title }}</h2>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'general/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'tables/css/style.css' %}">
+    <div class="row">
+        <div class="col-4">
+            <div class="leftBoxContainer">
+                <div class="leftBoxFlex">
+                    <form action="/{{ pathBack }}"
+                          method="get"
+                          enctype="multipart/form-data"
+                    >
+                        <button class="myButton">Назад</button>
+                    </form>
+                </div>
 
-    </br>
-    <div class="float-right" align="right">
-        <p><a href="/{{ pathBack }}" class="btn btn-info" role="button">Назад</a></p>
-        <p>
-        <form method="post" enctype="multipart/form-data" action="{% url 'deleteInstance' tableType=tableTypeRedirect UID=object.UID %}">
-            {% csrf_token %}
-            <input type="hidden" name="pathBack" value={{ pathBack }}>
-            <input type="submit" class="btn btn-danger" value="Удалить компонент" onclick="confirmDeletion(event)">
-        </form>
-        </p>
-        <p>
-        <form action="{% url 'uploadExcelFile' %}" method="get" class="form-inline my-2 my-lg-0"
-              enctype="multipart/form-data">
-            <input name="path" type=hidden value="{{ fileUploadPath }}">
-            <input type="hidden" name="pathBack" value={{ path }}>
-            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Загрузить файл</button>
-        </form>
-        </p>
+                <form action="{% url 'uploadExcelFile' %}" method="get" class="form-inline my-2 my-lg-0"
+                      enctype="multipart/form-data">
+                    <input name="path" type=hidden value="{{ fileUploadPath }}">
+                    <input type="hidden" name="pathBack" value={{ path }}>
+                    <button class="myButton" type="submit">Загрузить файл</button>
+                </form>
+
+                {% if files %}
+                    {% include "../general/general_modules/files.html" %}
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="centralBoxContainer"></div>
+            <h4>{{ object.title }}</h4>
+            {% if updateMessage %}
+                <div class="updateMessage">{{ updateMessage }}</div>
+            {% endif %}
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <table class="myTableInFolder">
+                    {{ form.as_table }}
+                </table>
+                <!-- yep, that's rude. Need refactoring of the whole template's path direction -->
+                <input type="hidden" name="path" value= {{ pathBack }}>
+                <input type="hidden" name="pathBack" value= {{ path }}>
+                <button type="submit" class="myButton">
+                    Обновить компонент
+                </button>
+            </form>
+        </div>
+        <div class="col-4">
+            <div class="rightBoxContainer">
+                <h4>Информация о {{ object.title }}</h4>
+                {% if object.status %}
+                    <table class="myTable">
+                        <tr>
+                            <th>Статус:</th>
+                        </tr>
+                        <tr>
+                            <td>{{ object.status }}</td>
+                        </tr>
+                    </table>
+                    <button class="myButton">
+                        Утвердить
+                    </button>
+                {% endif %}
+                <ul>
+                    <li>Дата создания: {{ object.creationDate.date }}</li>
+                    <li>Время создания: {{ object.creationDate.time }}</li>
+                    <li>Автор: {{ object.author }}</li>
+                </ul>
+
+                <form method="post" enctype="multipart/form-data"
+                      action="{% url 'deleteInstance' tableType=tableTypeRedirect UID=object.UID %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="pathBack" value={{ pathBack }}>
+                    <input type="submit" class="myButton" value="Удалить компонент"
+                           onclick="confirmDeletion(event)">
+                </form>
+            </div>
+        </div>
     </div>
-
-    <form method="post" enctype="multipart/form-data" action="{% url 'updateInstance' tableType=tableTypeRedirect UID=object.UID %}">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <input type="hidden" name="pathBack" value="{{ path }}">
-        <button type="submit" class="btn btn-primary">Изменить объект</button>
-    </form>
-
 {% endblock %}
-{% block navBarAdd %}
 
-{% endblock %}
+
 {% block tableContent %}
     <table class="table mb-0">
         <thead>
@@ -91,30 +139,4 @@
         {% endif %}
         </tbody>
     </table>
-    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
-    <script>
-        /*$(document).ready(function () {
-            $("form").each(function () {
-                $(this).find(':input').prop("disabled", true);
-                $("#delete_component").prop("disabled", true);
-            });
-            $("#block_items").click(function () {
-                if ($("#block_items").html() === "Заблокировать содержимое") {
-                    $("form").each(function () {
-                        $(this).find(':input').prop("disabled", true);
-                    });
-                    //$("#file_form").find(':input').prop("disabled", true);
-                    //$("#test").prop("disabled", true);
-                    $("#block_items").html("Разблокировать содержимое");
-                    $("#delete_component").prop("disabled", true);
-                } else if ($("#block_items").html() === "Разблокировать содержимое") {
-                    $("form").each(function () {
-                        $(this).find(':input').prop("disabled", false);
-                    });
-                    $("#block_items").html("Заблокировать содержимое");
-                    $("#delete_component").prop("disabled", false);
-                }
-            });
-        });
-    </script>
 {% endblock %}

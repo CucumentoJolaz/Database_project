@@ -3,51 +3,77 @@ from tables.models import subcomponentsTable, rawMaterialsTable, equipmentTable,
     measurementUnitTable, statusTable
 from django import forms
 
+defaultChoiceList = 'Не указана'
 
-class organisationChoice(forms.ModelChoiceField):
 
-    def label_from_instance(self, organisationObj):
-        return f'{organisationObj.title}'
+class somethingChoice(forms.ModelChoiceField):
 
-class statusChoice(forms.ModelChoiceField):
+    def label_from_instance(self, somethingObj):
+        return f'{somethingObj.title}'
 
-    def label_from_instance(self, statusObj):
-        return f'{statusObj.title}'
 
-# creating 3 different kind of forms, which supposed to display a form to
-# create an instanse of it's model
+class defaultTableForm(excelFolderForm):
+    def __init__(self, *args, **kwargs):
+        super(excelFolderForm, self).__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'formInputStyleTable'})
+
+        self.fields['description'].widget.attrs.update({'class': 'formInputStyleTable descriptionInput'})
+
+    title = forms.CharField(label='Название')
+    description = forms.CharField(widget=forms.Textarea, label='Описание')
+
+# creating 6 different kind of forms, which supposed to display a form to
+# create an instance of it's model
 # inheritance from excelFolderForm was made to inherit save() function
-class subcomponentsTableForm(excelFolderForm):
+class subcomponentsTableForm(defaultTableForm):
     class Meta:
         model = subcomponentsTable
         fields = ('title',
-                  'status', 'originalAmount', 'availableAmount',
+                  'originalAmount', 'availableAmount',
                   'creationTime', 'cost', 'path')
 
         widgets = {
             'path': forms.HiddenInput(), }
 
+    originalAmount = forms.FloatField(label='Искодное количество')
+    availableAmount = forms.FloatField(label='Актуальное количество')
+    creationTime = forms.TimeField(label='Время создания')
+    cost = forms.FloatField(label='Цена')
 
-class rawMaterialsTableForm(excelFolderForm):
+
+class rawMaterialsTableForm(defaultTableForm):
     class Meta:
         model = rawMaterialsTable
         fields = ['title',
-                  'status', 'originalAmount', 'availableAmount',
+                  'originalAmount', 'availableAmount',
                   'cost',
-                  'units', 'serialNumber',
+                  'measurementUnit', 'serialNumber',
                   'organisation', 'path']
         widgets = {
             'path': forms.HiddenInput(), }
 
-    organisation = organisationChoice(
-        queryset=organisationTable.objects.filter(deleted=False)
+    originalAmount = forms.FloatField(label='Искодное количество')
+    availableAmount = forms.FloatField(label='Актуальное количество')
+    cost = forms.FloatField(label='Цена')
+    serialNumber = forms.CharField(label='Серийный номер')
+
+    organisation = somethingChoice(
+        queryset=organisationTable.objects.filter(deleted=False),
+        required=False,
+        label='Организация',
+        empty_label=defaultChoiceList
     )
 
-    status = organisationChoice(
-        queryset=statusTable.objects.filter(deleted=False)
+    measurementUnit = somethingChoice(
+        queryset=measurementUnitTable.objects.filter(deleted=False),
+        required=False,
+        label='Единица измерения',
+        empty_label=defaultChoiceList
     )
 
-class equipmentTableForm(excelFolderForm):
+
+class equipmentTableForm(defaultTableForm):
     class Meta:
         model = equipmentTable
         fields = ('title',
@@ -58,12 +84,19 @@ class equipmentTableForm(excelFolderForm):
             'path': forms.HiddenInput(),
         }
 
-    organisation = organisationChoice(
-        queryset=organisationTable.objects.filter(deleted=False)
+    productivity = forms.FloatField(label='Продуктивность')
+    exploitationCost = forms.FloatField(label='Цена эксплуатации')
+    serialNumber = forms.CharField(label='Серийный номер')
+
+    organisation = somethingChoice(
+        queryset=organisationTable.objects.filter(deleted=False),
+        required=False,
+        label="Организация",
+        empty_label=defaultChoiceList
     )
 
 
-class measurementUnitTableForm(excelFolderForm):
+class measurementUnitTableForm(defaultTableForm):
     class Meta:
         model = measurementUnitTable
         fields = ('title',
@@ -73,7 +106,7 @@ class measurementUnitTableForm(excelFolderForm):
         }
 
 
-class statusTableForm(excelFolderForm):
+class statusTableForm(defaultTableForm):
     class Meta:
         model = statusTable
         fields = ('title',
@@ -83,7 +116,7 @@ class statusTableForm(excelFolderForm):
         }
 
 
-class organisationTableForm(excelFolderForm):
+class organisationTableForm(defaultTableForm):
     class Meta:
         model = organisationTable
         fields = ('title',
@@ -92,6 +125,8 @@ class organisationTableForm(excelFolderForm):
         widgets = {
             'path': forms.HiddenInput(),
         }
+
+    address = forms.CharField(label='Юридический адрес')
 
 
 # creating 3 different kind of forms, which supposed to display a form to

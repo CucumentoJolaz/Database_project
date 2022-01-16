@@ -50,6 +50,8 @@ def prFold(request, *args, **kwargs):
         # handling info about files and folders inside of the main folder
         folders = excelFolder.objects.filter(path=fullPath).order_by('title')
         files = excelFile.objects.filter(path=fullPath).order_by('title')
+        # from config.settings import STATICFILES_DIRS
+        # print(STATICFILES_DIRS)
         return render(request, 'general/prFold.html', {
             'folders': folders,  # all directories inside of this directory
             'foldPath': fullPath,  # full path to this directory

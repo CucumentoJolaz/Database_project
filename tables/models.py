@@ -6,6 +6,7 @@ class organisationTable(abstractFolder):
     address = models.CharField(max_length=500)
     parentFolder = models.ForeignKey(excelFolder, on_delete=models.SET_NULL, blank=True, null=True)
 
+
 class measurementUnitTable(abstractFolder):
     parentFolder = models.ForeignKey(excelFolder, on_delete=models.SET_NULL, blank=True, null=True)
 
@@ -16,7 +17,6 @@ class statusTable(abstractFolder):
 
 class rawMaterialsTable(abstractFolder):
     originalAmount = models.FloatField(default=0)
-    units = models.CharField(default="", max_length=300)
     availableAmount = models.FloatField(default=0)
     cost = models.FloatField(default=0)
     serialNumber = models.CharField(default="", max_length=300)

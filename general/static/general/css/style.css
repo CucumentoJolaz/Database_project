@@ -10,10 +10,101 @@
     font-size: inherit;
     text-align: left;
 }
+
 .city {
-  background-color: tomato;
-  color: white;
-  border: 2px solid black;
-  margin: 20px;
-  padding: 20px;
+    background-color: tomato;
+    color: white;
+    border: 2px solid black;
+    margin: 20px;
+    padding: 20px;
+}
+
+.image_class {
+    width: 40px;
+}
+
+.fileContainer {
+    padding: 10px 0px 10px 15px;
+}
+
+.myButton {
+
+    width: 300px;
+    /*height: 30px;*/
+    margin: 15px;
+    background-color: rgb(151, 223, 248);
+    border-radius: 5px;
+}
+
+.myButton:hover {
+    background-color: deepskyblue;
+}
+
+.myHrefBack {
+    border: solid rgb(151, 223, 248);
+    border-width: 2 2px;
+    padding: 2px;
+    line-height: 2;
+}
+
+.myTableInFolder {
+    border: 1px solid black;
+    margin: 30px 0px 0px 0px;
+}
+
+.myTable {
+    border: 1px solid black;
+    margin: 30px 0px 10px 15px;
+}
+
+td, th {
+    border: 1px solid #999;
+    padding: 4px;
+}
+
+th {
+    background-color: rgb(151, 223, 248);
+}
+
+tr:nth-child(odd) {
+    border: 1px solid #999;
+    padding: 4px;
+    background-color: lightgray;
+}
+
+.rightBoxContainer {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 80px;
+    margin: 20px 10px 10px 30px;
+}
+
+.rightBoxFlex {
+
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+}
+
+.topBoxContainer {
+
+    padding: 10px 0px 10px 30px;
+}
+
+.leftBoxContainer {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 80px;
+    /*overflow: auto;*/
+    margin: 20px 10px 10px 30px;
+}
+
+.centralBoxContainer {
+    margin: 20px 10px 10px 30px;
+}
+
+.leftBoxFlex {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
 }

@@ -4,14 +4,36 @@
 {% block title %} Создание нового компонента {% endblock %}
 
 {% block content %}
-    <div class="float-right">
-        <a href="/{{ pathBack }}" class="btn btn-info" role="button">Отменить</a>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'general/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'tables/css/style.css' %}">
+    <div class="row">
+        <div class="col-4">
+            <div class="leftBoxContainer">
+                <div class="leftBoxFlex">
+                    <form action="/{{ pathBack }}"
+                          method="get"
+                          enctype="multipart/form-data"
+                    >
+                        <button class="myButton">Отменить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="centralBoxContainer"></div>
+            <h4>Новый компонент</h4>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <table class="myTableInFolder">
+                    {{ form.as_table }}
+                </table>
+                <input type="hidden" name="path" value= {{ path }}>
+                <input type="hidden" name="pathBack" value= {{ pathBack }}>
+                <button type="submit" class="myButton">Создать объект</button>
+            </form>
+        </div>
     </div>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <input type="hidden" name="path" value= {{ path }}>
-        <input type="hidden" name="pathBack" value= {{ pathBack }}>
-        <button type="submit" class="btn btn-primary">Создать объект</button>
-    </form>
+
+
 {% endblock %}
