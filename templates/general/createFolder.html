@@ -1,0 +1,19 @@
+{% extends 'general/base_general.html' %}
+
+<!-- loading static data. From General, accounts and tables apps -->
+{% load static %}
+<!-- Inserting title of folder in to a head of the HTML-->
+{% block title %} Создание новой папки в {{ path }} {% endblock %}
+
+{% block content %}
+    <p><a href="{{ pathBack }}" class="btn btn-info" role="button">Назад</a></p>
+    <form action="{% url 'newExcelFolder' %}" method="POST" class="form-inline my-2 my-lg-0"
+          enctype="multipart/form-data">
+        {% csrf_token %}
+        <!--<input type = "file" name = "document">-->
+        {{ excelFolderForm }}
+        <input name="path" type=hidden value="{{ path }}">
+        <input type="hidden" name="pathBack" value={{ pathBack }}>
+        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Создать новую папку</button>
+    </form>
+{% endblock %}
