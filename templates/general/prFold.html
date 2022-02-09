@@ -9,7 +9,8 @@
 {% block content %}
     {% load static %}
     <link rel="stylesheet" href="{% static 'general/css/style.css' %}">
-
+    <link rel="stylesheet" href="{% static 'general/css/modal_windows.css' %}">
+    <link rel="stylesheet" href="{% static 'tables/css/style.css' %}">
     <div class="topBoxContainer">
         {% for title, link in treeTitlesLinks %}
             <b><a href="{% url 'prFold' %}{{ link }}"> {{ title }} </a> >></b>
@@ -20,20 +21,13 @@
         <div class="col-4">
             <div class="rightBoxContainer">
                 <h4>{{ theFolderObject.title }}</h4>
+                <button
+                        class="myButton"
+                        @click="showFolderModal">
+                    Создать новую папку
+                </button>
 
-                <form action="{% url 'newExcelFolder' %}"
-                      method="get"
-                      class="form-inline my-2 my-lg-0"
-                      enctype="multipart/form-data">
 
-                    <button
-                            class="myButton"
-                            type="submit">
-                        Создать новую папку
-                    </button>
-                    <input name="path" type=hidden value="{{ foldPath }}">
-                    <input type="hidden" name="pathBack" value={{ pathBack }}>
-                </form>
                 <form action="{% url 'uploadExcelFile' %}"
                       method="get"
                       class="form-inline my-2 my-lg-0"
@@ -49,12 +43,12 @@
                     {% include "./general_modules/folders.html" %}
                 {% endif %}
                 {% if files %}
-                     {% include "./general_modules/files.html" %}
+                    {% include "./general_modules/files.html" %}
                 {% endif %}
                 <h4>Инфо об этой папке</h4>
                 <div class="leftBoxFlex">
                     <button class="myButton">
-                        Переименовать не работает
+                        Переименовать
                     </button>
                     {% if theFolderObject.UID != 'prFold' %}
                         <form method="post" action="{% url 'deleteExcel' theFolderObject.pk 'folder' %}">
@@ -66,39 +60,56 @@
                             </button>
                         </form>
                     {% endif %}
-
-
                 </div>
                 <div class="leftBoxFlex">
                     <ul>
                         <li>Дата создания: {{ theFolderObject.creationDate }}</li>
+                        <li>Дата последнего редактирования: {{ theFolderObject.updateDate }}</li>
                         <li>Автор: {{ theFolderObject.author }}</li>
                     </ul>
                 </div>
 
             </div>
         </div>
-        {% if theFolderObject.tableName %}
-            <div class="col-8">
+        <div class="col-8">
+            <modal-template
+                    :modalwindowvisible="folderModalVisible"
+                    @update:modalwindowvisible="folderModalVisible = $event">
+                <form action="{% url 'newExcelFolder' %}" method="POST" class="form-inline my-2 my-lg-0"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <table class="myTableInFolder">
+                        {{ folderForm.as_table }}
+                        <input name="path" type=hidden value="{{ foldPath }}">
+                        <input type="hidden" name="pathBack" value="{{ pathBack }}">
+                        <input type="hidden" name="tableName" value="{{ theFolderObject.tableName }}">
+
+                    </table>
+                    <button class="myButton" type="submit">Создать новую папку</button>
+                </form>
+            </modal-template>
+            {% if theFolderObject.tableName %}
+
                 <div class="centralBoxContainer">
-                    {% if theFolderObject.tableName == 'equipmentTable' %}
+
+                    {% if theFolderObject.tableName == 'equipment' %}
                         {% include "./tables_in_prFold/equipmentTable.html" %}
-                    {% elif theFolderObject.tableName == 'rawMaterialsTable' %}
+                    {% elif theFolderObject.tableName == 'rawMaterial' %}
                         {% include "./tables_in_prFold/rawMaterialTable.html" %}
-                    {% elif theFolderObject.tableName == 'subcomponentsTable' %}
+                    {% elif theFolderObject.tableName == 'subcomponent' %}
                         {% include "./tables_in_prFold/subcomponentTable.html" %}
-                    {% elif theFolderObject.tableName == 'organisationTable' %}
+                    {% elif theFolderObject.tableName == 'organisation' %}
                         {% include "./tables_in_prFold/organisationTable.html" %}
-                    {% elif theFolderObject.tableName == 'measurementUnitTable' %}
+                    {% elif theFolderObject.tableName == 'measurementUnit' %}
                         {% include "./tables_in_prFold/measurementUnitTable.html" %}
-                    {% elif theFolderObject.tableName == 'statusTable' %}
+                    {% elif theFolderObject.tableName == 'status' %}
                         {% include "./tables_in_prFold/statusTable.html" %}
                     {% endif %}
                 </div>
-            </div>
-        {% endif %}
-    </div>
 
+            {% endif %}
+        </div>
+    </div>
 
 {% endblock %}
 

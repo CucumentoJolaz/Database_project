@@ -25,12 +25,13 @@ class abstractFolder(models.Model):
     author = models.CharField(max_length=300, default="No author")
     path = models.CharField(max_length=300, default="ghost",  blank=True)
     creationDate = models.DateTimeField(auto_now_add=True)
+    updateDate = models.DateTimeField(auto_now=True)
     UID = models.CharField(max_length=300, default="")
     tableName = models.CharField(max_length=300,
                                  default="",  blank=True)  # this field tells a folder about table fields, which contains the folder
     parentFolder = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
     deleted = models.BooleanField(default=False)
-    description = models.TextField(default="",  blank=True)
+    description = models.TextField(default="", blank=True)
 
     def __str__(self):
         return self.title
@@ -59,6 +60,14 @@ class abstractFolder(models.Model):
             folder.falseDeletion()
         for file in files:
             file.falseDeletion()
+
+        # if self.tableName:
+        #     tableInfoProc = tc.tableInfoProcessor()
+        #     tableModel = tableInfoProc.tableTypeModel(self.tableName)
+        #     tables = tableInfoProc.getTables(self)
+        #     for table in tables:
+        #         table.falseDeletion()
+
         self.deleted = True
         self.save()
 
@@ -76,10 +85,11 @@ class excelFile(models.Model):
     author = models.CharField(max_length=100)
     file = models.FileField(upload_to=content_file_name)
     creationDate = models.DateTimeField(auto_now_add=True)
+    updateDate = models.DateTimeField(auto_now=True)
     path = models.CharField(max_length=500, default="prFold")
-    UID = models.CharField(max_length=300, default="")
+    UID = models.CharField(max_length=10, default="")
     additionalInfo = models.CharField(max_length=1000, default="")
-    # fileFolder = models.ForeignKey(excelFolder, on_delete=models.DO_NOTHING, default = 107)
+    parentFolderUID = models.CharField(max_length=10, default="")
     deleted = models.BooleanField(default=False)
 
     def __str__(self):

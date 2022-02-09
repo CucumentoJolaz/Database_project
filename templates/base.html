@@ -5,45 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
           integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-    {% load static %}
+
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://unpkg.com/vue"></script>
 
     <title>{% block title %}{% endblock %}</title>
 
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-light mb-4" style="background-color:rgb(151, 223, 248);">
-    <div class="container">
-        {% block navBarPrimal %}
-        {% endblock %}
-        {% block navBarAdd %}
-        {% endblock %}
-    </div>
-</nav>
-{% block content %}
-{% endblock %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
-        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
-        crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
-        integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
-        crossorigin="anonymous"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
-<script>
-    function confirmDeletion(e) {
-        var txt;
-        if (!confirm("Вы уверены в удалении?")) {
-            e.preventDefault();
-        }
-        document.getElementById("demo").innerHTML = txt;
-    }
+<div id="app">
 
-    function confirmApproval(e) {
-        var txt;
-        if (!confirm("Вы уверены в утверждении?")) {
-            e.preventDefault();
-        }
-        document.getElementById("demo").innerHTML = txt;
-    }
-</script>
+
+    <nav class="navbar navbar-expand-lg navbar-light mb-4" style="background-color:rgb(151, 223, 248);">
+        <div class="container">
+            {% block navBarPrimal %}
+            {% endblock %}
+            {% block navBarAdd %}
+            {% endblock %}
+        </div>
+    </nav>
+    {% block content %}
+    {% endblock %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+            integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+            integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+            crossorigin="anonymous"></script>
+
+</div>
+
+{% load static %}
+<script src="{% static "general/js/assets.js" %}"></script>
+<script src="{% static "general/js/main.js" %}"></script>
 </body>
 </html>

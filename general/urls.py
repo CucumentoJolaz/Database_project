@@ -8,11 +8,7 @@ urlpatterns = [
     path('', views.home, name='home'),
 
     path('prFold/', views.prFold, name = 'prFold'),
-    path('prFold/<slug:a_id>/', views.prFold, name='prFold'),
-    path('prFold/<slug:a_id>/<slug:b_id>/', views.prFold, name='prFold'),
-    path('prFold/<slug:a_id>/<slug:b_id>/<slug:c_id>/', views.prFold, name='prFold'),
-    path('prFold/<slug:a_id>/<slug:b_id>/<slug:c_id>/<slug:d_id>/', views.prFold, name='prFold'),
-    path('prFold/<slug:a_id>/<slug:b_id>/<slug:c_id>/<slug:d_id>/<slug:f_id>/', views.prFold, name='prFold'),
+    path('prFold/<slug:fold_uid>/', views.prFold, name='prFold_uid'),
 
     path('deleteFolder/<int:pk>/<slug:type>', views.deleteExcel, name='deleteExcel'),
     path('uploadExcelFile', views.uploadExcelFile, name = 'uploadExcelFile'),

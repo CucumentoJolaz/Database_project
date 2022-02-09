@@ -19,7 +19,7 @@
     padding: 20px;
 }
 
-.image_class {
+.tableImage {
     width: 40px;
 }
 
@@ -57,16 +57,17 @@
     margin: 30px 0px 10px 15px;
 }
 
-td, th {
+table.myTableInFolder td, th {
     border: 1px solid #999;
     padding: 4px;
 }
 
-th {
+table.myTableInFolder th {
     background-color: rgb(151, 223, 248);
 }
 
-tr:nth-child(odd) {
+
+table.myTableInFolder tr:nth-child(odd) {
     border: 1px solid #999;
     padding: 4px;
     background-color: lightgray;
@@ -79,7 +80,7 @@ tr:nth-child(odd) {
     margin: 20px 10px 10px 30px;
 }
 
-.rightBoxFlex {
+.boxFlex {
 
     display: flex;
     flex-direction: column;

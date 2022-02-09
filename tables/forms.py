@@ -1,4 +1,4 @@
-from general.forms import excelFolderForm
+from general.forms import abstractFolderForm
 from tables.models import subcomponentsTable, rawMaterialsTable, equipmentTable, organisationTable, \
     measurementUnitTable, statusTable
 from django import forms
@@ -12,21 +12,10 @@ class somethingChoice(forms.ModelChoiceField):
         return f'{somethingObj.title}'
 
 
-class defaultTableForm(excelFolderForm):
-    def __init__(self, *args, **kwargs):
-        super(excelFolderForm, self).__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.widget.attrs.update({'class': 'formInputStyleTable'})
-
-        self.fields['description'].widget.attrs.update({'class': 'formInputStyleTable descriptionInput'})
-
-    title = forms.CharField(label='Название')
-    description = forms.CharField(widget=forms.Textarea, label='Описание')
-
 # creating 6 different kind of forms, which supposed to display a form to
 # create an instance of it's model
 # inheritance from excelFolderForm was made to inherit save() function
-class subcomponentsTableForm(defaultTableForm):
+class subcomponentsTableForm(abstractFolderForm):
     class Meta:
         model = subcomponentsTable
         fields = ('title',
@@ -38,11 +27,11 @@ class subcomponentsTableForm(defaultTableForm):
 
     originalAmount = forms.FloatField(label='Искодное количество')
     availableAmount = forms.FloatField(label='Актуальное количество')
-    creationTime = forms.TimeField(label='Время создания')
+    creationTime = forms.TimeField(label='Время создания', widget=forms.TimeInput(format='%H:%M:%S'))
     cost = forms.FloatField(label='Цена')
 
 
-class rawMaterialsTableForm(defaultTableForm):
+class rawMaterialsTableForm(abstractFolderForm):
     class Meta:
         model = rawMaterialsTable
         fields = ['title',
@@ -73,7 +62,7 @@ class rawMaterialsTableForm(defaultTableForm):
     )
 
 
-class equipmentTableForm(defaultTableForm):
+class equipmentTableForm(abstractFolderForm):
     class Meta:
         model = equipmentTable
         fields = ('title',
@@ -96,7 +85,7 @@ class equipmentTableForm(defaultTableForm):
     )
 
 
-class measurementUnitTableForm(defaultTableForm):
+class measurementUnitTableForm(abstractFolderForm):
     class Meta:
         model = measurementUnitTable
         fields = ('title',
@@ -106,7 +95,7 @@ class measurementUnitTableForm(defaultTableForm):
         }
 
 
-class statusTableForm(defaultTableForm):
+class statusTableForm(abstractFolderForm):
     class Meta:
         model = statusTable
         fields = ('title',
@@ -116,7 +105,7 @@ class statusTableForm(defaultTableForm):
         }
 
 
-class organisationTableForm(defaultTableForm):
+class organisationTableForm(abstractFolderForm):
     class Meta:
         model = organisationTable
         fields = ('title',

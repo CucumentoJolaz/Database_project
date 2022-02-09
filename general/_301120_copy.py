@@ -3,9 +3,7 @@ from django.conf import settings
 from general.models import excelFolder, excelFile, rawMaterialsTable, equipmentTable, subcomponentsTable
 from general.forms import excelFileForm, excelFolderForm, subcomponentsTableForm
 from django.http import Http404, HttpResponse
-from general.functions import pathCalculation
-from django.views.generic import CreateView
-from django.urls import reverse_lazy
+from general.functions.tree_folders import pathCalculation
 
 
 # функция генерации случайных номеров, без проверки их уникальности

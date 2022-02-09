@@ -2,9 +2,11 @@ from django.conf import settings
 from django.http import HttpResponseNotFound
 from django.shortcuts import render, redirect, get_object_or_404
 
-import tables.tableCheckFunctions as tc
+import tables.functions.table_check as tc
 from general.forms import excelFileForm
 from general.models import excelFile
+from tables.functions.tree_folders import tablesLinkTreeGenerator
+import general.functions.tree_folders as genFunc
 
 
 def createProcessingView(request, **kwargs):
@@ -18,15 +20,18 @@ def createProcessingView(request, **kwargs):
         if request.method == 'POST':
             formData = viewForm(request.POST)
             if formData.is_valid():
-                formData.path = request.POST['path']
-                formData.save(author=request.user.get_username())
+                formData.save(author=request.user.get_username(), path=request.POST['path'])
             return redirect("/" + request.POST['pathBack'])
 
         formData = viewForm()
         if 'path' in request.GET and 'pathBack' in request.GET:
-            return render(request, 'tables/createTableTemplate.html', {'form': formData,
-                                                                       'path': request.GET['path'],
-                                                                       'pathBack': request.GET['pathBack']})
+            print(request.GET)
+            tg = genFunc.prFoldLinkTreeGenerator()
+            treeTitlesLinks = tg.getLinksUIDsTree(folderUID=request.GET['path'].split("/")[-1])
+            return render(request, 'tables/createTable.html', {'form': formData,
+                                                               'path': request.GET['path'],
+                                                               'pathBack': request.GET['pathBack'],
+                                                               'treeTitlesLinks': treeTitlesLinks})
         else:
             return redirect('home')
 
@@ -37,34 +42,33 @@ def updateProcessingView(request, **kwargs):
         return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
     else:
         tableInfoProc = tc.tableInfoProcessor()
-
         viewForm = tableInfoProc.tableTypeFormUpdate(kwargs['tableType'])
         viewModel = tableInfoProc.tableTypeModel(kwargs['tableType'])
 
         if request.method == 'POST':
             instance = get_object_or_404(viewModel, UID=kwargs['UID'])
             form = viewForm(request.POST, instance=instance)
-            updateMessage="Не получилось обновить компонент."
+            updateMessage = "Не получилось обновить компонент."
             if form.is_valid():
                 form.save()
-                updateMessage="Компонент успешно обновлён!"
-            return redirect(f"/{request.POST['pathBack']}?updateMessage={updateMessage}")
+                updateMessage = "Компонент успешно обновлён!"
+            return redirect(f"/{request.POST['pathToInstance']}?updateMessage={updateMessage}")
 
         if request.method == 'GET':
             modelData = viewModel.objects.get(UID=kwargs['UID'])
             form = viewForm(instance=modelData)
-            renderDict = {'path': f"tables/update/{kwargs['tableType']}/{modelData.UID}",
-                          'pathBack': f"{modelData.path}",
-                          'fileUploadPath': f"{modelData.path}/{modelData.UID}",
+            treeTitlesLinksGenerator = tablesLinkTreeGenerator(tableType=kwargs['tableType'])
+            treeTitlesLinks = treeTitlesLinksGenerator.getLinksUIDsTreeTable(tableUID=kwargs['UID'])
 
-                          'excelFileForm': excelFileForm,
+            renderDict = {'excelFileForm': excelFileForm,
                           'files': excelFile.objects.filter(path=f"{modelData.path}/{modelData.UID}").order_by('title'),
                           'object': modelData,
                           'form': form,
                           'tableTypeRedirect': kwargs['tableType'],
-                          'updateMessage': request.GET.get('updateMessage', '')
+                          'updateMessage': request.GET.get('updateMessage', ''),
+                          "treeTitlesLinks": treeTitlesLinks
                           }
-            return render(request, 'tables/updateTableTemplate.html', renderDict)
+            return render(request, 'tables/updateTable.html', renderDict)
 
 
 def deleteProcessingView(request, **kwargs):
@@ -79,7 +83,8 @@ def deleteProcessingView(request, **kwargs):
             modelData = viewModel.objects.get(UID=kwargs.get('UID'))
             modelData.falseDeletion()
 
-        return redirect("/" + request.POST['pathBack'])
+        return redirect(request.POST['pathToParentFolder'])
+
 
 def approveTable(request, tableType, pk):
     if not request.user.is_authenticated:

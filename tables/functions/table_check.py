@@ -18,11 +18,11 @@ class tableInfo():
 class tableInfoProcessor():
     tableList = [
         tableInfo(dbTitle="equipment", model=equipmentTable, form=equipmentTableForm, updateForm=equipmentTableFormUpdate),
-        tableInfo(dbTitle="rawMaterials", model=rawMaterialsTable, form=rawMaterialsTableForm, updateForm=rawMaterialsTableFormUpdate),
-        tableInfo(dbTitle="subcomponents", model=subcomponentsTable, form=subcomponentsTableForm, updateForm=subcomponentsTableFormUpdate),
+        tableInfo(dbTitle="rawMaterial", model=rawMaterialsTable, form=rawMaterialsTableForm, updateForm=rawMaterialsTableFormUpdate),
+        tableInfo(dbTitle="subcomponent", model=subcomponentsTable, form=subcomponentsTableForm, updateForm=subcomponentsTableFormUpdate),
         tableInfo(dbTitle="organisation", model=organisationTable, form=organisationTableForm, updateForm=organisationTableFormUpdate),
         tableInfo(dbTitle="status", model=statusTable, form=statusTableForm, updateForm=statusTableFormUpdate),
-        tableInfo(dbTitle="measurementUnit", model=measurementUnitTable, form=measurementUnitTableForm, updateForm=measurementUnitTableFormUpdate)
+        tableInfo(dbTitle="measurementUnit", model=measurementUnitTable, form=measurementUnitTableForm, updateForm=measurementUnitTableFormUpdate),
     ]
 
     def tableTypeModel(self, tableName: str):
@@ -49,9 +49,9 @@ class tableInfoProcessor():
             if isinstance(tableInfo.model, tableModel):
                 return tableInfo.dbTitle
 
-    def getTablesInfo(self, theFolderObject):
+    def getTables(self, theFolderObject):
         """Receiving primal folder instance, and returning all of it's tables instances, which lies within"""
         if theFolderObject.tableName:
             for tableInfo in self.tableList:
-                if theFolderObject.tableName == tableInfo.dbTitle + "Table":
+                if theFolderObject.tableName == tableInfo.dbTitle:
                     return tableInfo.model.objects.filter(parentFolder__pk=theFolderObject.pk)

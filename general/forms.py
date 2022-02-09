@@ -1,9 +1,7 @@
 from django import forms
 from .models import excelFolder, excelFile
-import os
-from config.settings import MEDIA_ROOT
-from general.functions import getUID
-from general.db_init import createDir
+from general.functions.tree_folders import getUID
+from general.functions.db_init import createDir
 
 class NameForm(forms.Form):
     your_name = forms.CharField(label='your name', max_length=100)
@@ -14,6 +12,36 @@ class ContactForm(forms.Form):
     message = forms.CharField(widget=forms.Textarea)
     sender = forms.EmailField()
     cc_myself = forms.BooleanField(required=False)
+
+class abstractFolderForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(abstractFolderForm, self).__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'formInputStyleTable'})
+
+        self.fields['description'].widget.attrs.update({'class': 'formInputStyleTable descriptionInput'})
+
+    title = forms.CharField(label='Название')
+    description = forms.CharField(widget=forms.Textarea,
+                                  label='Описание',
+                                  required=False)
+    class Meta:
+        model = excelFolder
+        fields = ('title', 'description')
+
+    def save(self, author, path="ghost", tableName="", commit=True):
+        instance = super(abstractFolderForm, self).save(commit=False)
+        newUID = getUID()
+        instance.UID = newUID
+        instance.author = author
+        instance.path = path
+        instance.tableName = tableName
+        createDir("/".join([instance.path, newUID]))
+        q = excelFolder.objects.get(UID=instance.path.rsplit("/")[-1])  # ищем ту директорию, в которую созраняется файл
+        instance.parentFolder = q  # присваиваем файл к данной директории
+        if commit:
+            instance.save()
+        return instance
 
 
 class excelFileForm(forms.ModelForm):
@@ -27,34 +55,14 @@ class excelFileForm(forms.ModelForm):
         instance.title = title
         instance.author = author
         instance.UID = getUID()
+        instance.parentFolderUID = instance.path.split("/")[-1]
         instance.file.filename = instance.UID
         if commit:
             instance.save()
         return instance
 
+class excelFolderForm(abstractFolderForm):
+    pass
 
-class excelFolderForm(forms.ModelForm):
-    class Meta:
-        model = excelFolder
-        fields = ('title', 'path', 'author')
-        widgets = {
-            'path': forms.HiddenInput(),
-            'author': forms.HiddenInput(),
-            #'path': forms.TextInput(attrs={'placeholder': 'Введите название новой директории'}),
-        }
-
-    def save(self, author, commit=True):
-        instance = super(excelFolderForm, self).save(commit=False)
-        newUID = getUID()
-        instance.UID = newUID
-        instance.author = author
-        createDir("/".join([instance.path, newUID]))
-        q = excelFolder.objects.get(UID=instance.path.rsplit("/")[-1])  # ищем ту директорию, в которую созраняется файл
-        print(q, type(q))
-
-        instance.parentFolder = q  # присваиваем файл к данной директории
-        if commit:
-            instance.save()
-        return instance
 
 
