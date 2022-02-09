@@ -7,6 +7,7 @@
 
 Данное приложение предназначено для ведения документооборота на предприятии.
 
+Код в немалой степени не соответствует стандартам. Например, названия функций и классов не соответствует PEP 8.
 ![alt text](staticfiles/present_img/prim_str.png)
 ![alt text](staticfiles/present_img/equipment.png)
 ![alt text](staticfiles/present_img/equipment_inst.png)
