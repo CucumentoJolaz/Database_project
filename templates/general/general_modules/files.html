@@ -1,0 +1,12 @@
+{% for file in files %}
+    {% if not file.deleted %}
+        {% load static %}
+        <div class="fileContainer">
+            <a href="{% url 'downloadExcelFile' file.pk %}">
+                <image src="{% static 'general/images/file.png' %}" class="tableImage"></image>
+                {{ file.title }}
+            </a>
+        </div>
+
+    {% endif %}
+{% endfor %}

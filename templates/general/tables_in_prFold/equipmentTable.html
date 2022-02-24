@@ -1,0 +1,34 @@
+<h4>Оборудование</h4>
+<form action="{% url 'newInstance' tableType=tableTypeRedirect %}"
+      method="GET" class="form-inline my-2 my-lg-0"
+      enctype="multipart/form-data">
+    <button class="myButton" type="submit">Внести новое оборудование
+    </button>
+    <input name="path" type=hidden value="{{ theFolderObject.path }}/{{ theFolderObject.UID }}">
+    <input name="pathBack" type=hidden value="{{ pathBack }}">
+</form>
+<table class="myTableInFolder">
+    <tr>
+        <th>№</th>
+        <th>Наименование</th>
+        <th>Дата регистрации</th>
+        <th>Производительность [кг/час]</th>
+        <th>Стоимость эксплуатации [тыс.руб/ч]</th>
+    </tr>
+    {% if tables %}
+        {% for table in tables %}
+            {% if not table.deleted %}
+                <tr>
+                    <td>{{ table.pk }}</td>
+                    <td>
+                        <a href="{% url 'updateInstance' tableType=tableTypeRedirect UID=table.UID %}">
+                            {{ table.title }}
+                    </td>
+                    <td>{{ table.creationDate.date }}</td>
+                    <td>{{ table.productivity }}</td>
+                    <td>{{ table.exploitationCost }}</td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+</table>

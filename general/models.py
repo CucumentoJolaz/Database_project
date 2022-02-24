@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 import os
 import shutil
 from config.settings import MEDIA_ROOT
@@ -18,18 +19,17 @@ class UIDlist(models.Model):
 
 # abstract folder - paternal abstract class for several different instances of data structures in the database cite
 class abstractFolder(models.Model):
-    class Meta():
+    class Meta:
         abstract = True
 
-    title = models.CharField(max_length=200)
-    author = models.CharField(max_length=300, default="No author")
+    title = models.CharField(max_length=100)
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
     path = models.CharField(max_length=300, default="ghost",  blank=True)
     creationDate = models.DateTimeField(auto_now_add=True)
     updateDate = models.DateTimeField(auto_now=True)
-    UID = models.CharField(max_length=300, default="")
-    tableName = models.CharField(max_length=300,
+    UID = models.CharField(max_length=10, default="")
+    tableName = models.CharField(max_length=50,
                                  default="",  blank=True)  # this field tells a folder about table fields, which contains the folder
-    parentFolder = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
     deleted = models.BooleanField(default=False)
     description = models.TextField(default="", blank=True)
 
@@ -77,12 +77,12 @@ class abstractFolder(models.Model):
 
 
 class excelFolder(abstractFolder):
-    pass
+    parentFolder = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
 
 
 class excelFile(models.Model):
     title = models.CharField(max_length=100)
-    author = models.CharField(max_length=100)
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
     file = models.FileField(upload_to=content_file_name)
     creationDate = models.DateTimeField(auto_now_add=True)
     updateDate = models.DateTimeField(auto_now=True)

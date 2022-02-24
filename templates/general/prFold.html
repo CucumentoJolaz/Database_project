@@ -9,7 +9,7 @@
 {% block content %}
     {% load static %}
     <link rel="stylesheet" href="{% static 'general/css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'general/css/modal_windows.css' %}">
+    <link rel="stylesheet" href="{% static 'general/css/modal_window.css' %}">
     <link rel="stylesheet" href="{% static 'tables/css/style.css' %}">
     <div class="topBoxContainer">
         {% for title, link in treeTitlesLinks %}
@@ -26,18 +26,12 @@
                         @click="showFolderModal">
                     Создать новую папку
                 </button>
+                <button
+                        class="myButton"
+                        @click="showFileModal">
+                    Загрузить файл
+                </button>
 
-
-                <form action="{% url 'uploadExcelFile' %}"
-                      method="get"
-                      class="form-inline my-2 my-lg-0"
-                      enctype="multipart/form-data">
-                    <input name="path" type=hidden value="{{ foldPath }}">
-                    <input type="hidden" name="pathBack" value={{ pathBack }}>
-                    <button class="myButton" type="submit">
-                        Загрузить файл
-                    </button>
-                </form>
 
                 {% if folders %}
                     {% include "./general_modules/folders.html" %}
@@ -73,6 +67,22 @@
         </div>
         <div class="col-8">
             <modal-template
+                    :modalwindowvisible="fileModalVisible"
+                    @update:modalwindowvisible="fileModalVisible = $event">
+                <form action="{% url 'uploadExcelFile' %}" method="POST" class="form-inline my-2 my-lg-0"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <table class="myTableInFolder">
+                        {{ fileForm.as_table }}
+                        <input name="path" type=hidden value="{{ foldPath }}">
+                        <input type="hidden" name="pathBack" value="{{ pathBack }}">
+                        <input type="hidden" name="tableName" value="{{ theFolderObject.tableName }}">
+
+                    </table>
+                    <button class="myButton" type="submit">Загрузить файл</button>
+                </form>
+            </modal-template>
+            <modal-template
                     :modalwindowvisible="folderModalVisible"
                     @update:modalwindowvisible="folderModalVisible = $event">
                 <form action="{% url 'newExcelFolder' %}" method="POST" class="form-inline my-2 my-lg-0"
@@ -104,6 +114,12 @@
                         {% include "./tables_in_prFold/measurementUnitTable.html" %}
                     {% elif theFolderObject.tableName == 'status' %}
                         {% include "./tables_in_prFold/statusTable.html" %}
+                    {% elif theFolderObject.tableName == 'document' %}
+                        {% include "./tables_in_prFold/documentTable.html" %}
+                    {% elif theFolderObject.tableName == 'documentType' %}
+                        {% include "./tables_in_prFold/documentTypeTable.html" %}
+                    {% elif theFolderObject.tableName == 'department' %}
+                        {% include "./tables_in_prFold/departmentTable.html" %}
                     {% endif %}
                 </div>
 

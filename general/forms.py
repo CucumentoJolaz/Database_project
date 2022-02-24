@@ -3,6 +3,7 @@ from .models import excelFolder, excelFile
 from general.functions.tree_folders import getUID
 from general.functions.db_init import createDir
 
+
 class NameForm(forms.Form):
     your_name = forms.CharField(label='your name', max_length=100)
 
@@ -13,22 +14,8 @@ class ContactForm(forms.Form):
     sender = forms.EmailField()
     cc_myself = forms.BooleanField(required=False)
 
+
 class abstractFolderForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        super(abstractFolderForm, self).__init__(*args, **kwargs)
-        for field in self.fields.values():
-            field.widget.attrs.update({'class': 'formInputStyleTable'})
-
-        self.fields['description'].widget.attrs.update({'class': 'formInputStyleTable descriptionInput'})
-
-    title = forms.CharField(label='Название')
-    description = forms.CharField(widget=forms.Textarea,
-                                  label='Описание',
-                                  required=False)
-    class Meta:
-        model = excelFolder
-        fields = ('title', 'description')
-
     def save(self, author, path="ghost", tableName="", commit=True):
         instance = super(abstractFolderForm, self).save(commit=False)
         newUID = getUID()
@@ -61,8 +48,20 @@ class excelFileForm(forms.ModelForm):
             instance.save()
         return instance
 
+
 class excelFolderForm(abstractFolderForm):
-    pass
+    def __init__(self, *args, **kwargs):
+        super(abstractFolderForm, self).__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'formInputStyleTable'})
 
+        self.fields['description'].widget.attrs.update({'class': 'formInputStyleTable descriptionInput'})
 
+    title = forms.CharField(label='Название')
+    description = forms.CharField(widget=forms.Textarea,
+                                  label='Описание',
+                                  required=False)
 
+    class Meta:
+        model = excelFolder
+        fields = ('title', 'description')

@@ -1,0 +1,124 @@
+{% extends 'general/base_general.html' %}
+
+{% load static %}
+
+
+{% block title %}Модификация {{ object.title }}{% endblock %}
+
+{% block content %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'general/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'tables/css/style.css' %}">
+    <div class="topBoxContainer">
+        {% for title, link in treeTitlesLinks %}
+            <b><a href="{% url 'prFold' %}{{ link }}"> {{ title }} </a> >></b>
+        {% endfor %}
+        <b><a href="{% url 'updateInstance' tableType=tableTypeRedirect UID=object.UID %}"> {{ object.title }} </a>
+            >></b>
+    </div>
+    <div class="row">
+        <div class="col-4">
+            <div class="leftBoxContainer">
+                <div class="leftBoxFlex">
+                    <form action="{% url 'prFold_uid' object.parentFolder.UID %}"
+                          method="get"
+                          enctype="multipart/form-data"
+                    >
+                        <button class="myButton">Назад</button>
+                    </form>
+                </div>
+                {% if updateTemp %}
+                    <form action="{% url 'uploadExcelFile' %}" method="get" class="form-inline my-2 my-lg-0"
+                          enctype="multipart/form-data">
+                        <input name="path" type=hidden value="{{ object.path }}/{{ object.UID }}">
+                        <input name="pathBack" type="hidden"
+                               value="tables/update/{{ tableTypeRedirect }}/{{ object.UID }}">
+                        <button class="myButton" type="submit">Загрузить файл</button>
+                    </form>
+                {% endif %}
+                {% if files %}
+                    {% include "../general/general_modules/files.html" %}
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="centralBoxContainer"></div>
+            <h4>{{ object.title }}</h4>
+            {% if updateMessage %}
+                <div class="updateMessage">{{ updateMessage }}</div>
+            {% endif %}
+            <form
+                    method="post"
+                    enctype="multipart/form-data"
+            >
+                {% csrf_token %}
+                <table class="myTableInFolder">
+
+                    {{ form.as_table }}
+                </table>
+                <input type="hidden" name="pathToInstance"
+                       value="tables/update/{{ tableTypeRedirect }}/{{ object.UID }}">
+                {% if updateTemp %}
+                    <button type="submit" class="myButton">
+                        Обновить компонент
+                    </button>
+                {% endif %}
+            </form>
+        </div>
+        <div class="col-4">
+            <div class="rightBoxContainer">
+                <h4>Информация о {{ object.title }}</h4>
+
+                <ul>
+                    <li>Дата создания: {{ object.creationDate.date }}</li>
+                    <li>Время создания: {{ object.creationDate.time }}</li>
+                    <li>Дата последнего изменения: {{ object.updateDate.date }}</li>
+                    <li>Время последнего изменения: {{ object.updateDate.time }}</li>
+                    <li>Автор: {{ object.author }}</li>
+                </ul>
+                {% if object.status %}
+                    <table class="myTable">
+                        <tr>
+                            <th>Статус:</th>
+                        </tr>
+                        <tr>
+                            <td>{{ object.status }}</td>
+                        </tr>
+                    </table>
+                    {% if updateTemp %}
+                        <form method="post" enctype="multipart/form-data"
+                              action="{% url 'changeStatus' tableType=tableTypeRedirect UID=object.UID %}">
+                            {% csrf_token %}
+                            {{ statusForm.as_p }}
+                            <input type="hidden" name="pathToInstance"
+                                   value="tables/update/{{ tableTypeRedirect }}/{{ object.UID }}">
+                            <input type="submit" class="myButton" value="Сменить статус">
+                        </form>
+                    {% endif %}
+                {% endif %}
+                {% if not updateTemp %}
+                    <form method="get" enctype="multipart/form-data"
+                          action="{% url 'updateInstance' tableType=tableTypeRedirect UID=object.UID %}">
+                        <input type="hidden" name="update" value="update">
+                        <input type="submit" class="myButton" value="Включить режим модификации">
+                    </form>
+                {% else %}
+                    <form method="get" enctype="multipart/form-data"
+                          action="{% url 'updateInstance' tableType=tableTypeRedirect UID=object.UID %}">
+                        <input type="submit" class="myButton" value="Отключить режим модификации">
+                    </form>
+                {% endif %}
+                {% if updateTemp %}
+                    <form method="post" enctype="multipart/form-data"
+                          action="{% url 'deleteInstance' tableType=tableTypeRedirect UID=object.UID %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="pathToParentFolder"
+                               value={% url 'prFold_uid' object.parentFolder.UID %}>
+                        <input type="submit" class="myButton" value="Удалить компонент"
+                               onclick="confirmDeletion(event)">
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

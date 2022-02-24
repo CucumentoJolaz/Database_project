@@ -1,5 +1,6 @@
 from general.forms import excelFolderForm, excelFileForm
 from general.models import excelFolder, excelFile
+
 import general.functions.tree_folders as genFunc
 import tables.functions.table_check as tc
 
@@ -26,7 +27,7 @@ def prFoldInitialise(theFolderObject: excelFolder) -> dict:
 
     tableInfoProc = tc.tableInfoProcessor()
     tables = tableInfoProc.getTables(theFolderObject)
-    tableType = theFolderObject.tableName.replace("Table", "")
+    tableType = theFolderObject.tableName
     # handling info about files and folders inside of the main folder
     folders = excelFolder.objects.filter(parentFolder=theFolderObject).order_by('title')
     files = excelFile.objects.filter(parentFolderUID=theFolderObject.UID).order_by('title')
@@ -44,3 +45,5 @@ def prFoldInitialise(theFolderObject: excelFolder) -> dict:
                'folderForm': folderForm,
                'fileForm': fileForm, }
     return outDict
+
+

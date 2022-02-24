@@ -1,0 +1,36 @@
+<h4>Субкомпоненты</h4>
+<form action="{% url 'newInstance' tableType=tableTypeRedirect %}"
+      method="GET" class="form-inline my-2 my-lg-0"
+      enctype="multipart/form-data">
+    <button class="myButton" type="submit">Внести новый субкомпонент
+    </button>
+    <input name="path" type=hidden value="{{ theFolderObject.path }}/{{ theFolderObject.UID }}">
+    <input name="pathBack" type=hidden value="{{ pathBack }}">
+</form>
+<table class="myTableInFolder">
+    <tr>
+        <th>№ п/п</th>
+        <th>Статус</th>
+        <th>Название</th>
+        <th>Доступное количество [кг]</th>
+        <th>Цена [тыс. руб/кг]</th>
+        <th>Дата регистрации</th>
+    </tr>
+    {% if tables %}
+        {% for table in tables %}
+            {% if not table.deleted %}
+                <tr>
+                    <td>{{ table.pk }}</td>
+                    <td>{{ table.status }}</td>
+                    <td>
+                        <a href="{% url 'updateInstance' tableType=tableTypeRedirect UID=table.UID %}">
+                            {{ table.title }}
+                    </td>
+                    <td>{{ table.availableAmount }}</td>
+                    <td>{{ table.cost }}</td>
+                    <td>{{ table.creationDate.date }}</td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+</table>

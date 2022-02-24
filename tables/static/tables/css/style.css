@@ -1,0 +1,18 @@
+.updateMessage {
+    color: darkgoldenrod;
+    font-weight: bold;
+}
+.descriptionInput {
+    height: 100px;
+}
+.updateTableForm {
+    color: black;
+    width: 98%;
+}
+.demoTableForm {
+    color: black;
+    background-color: transparent;
+    border: none;
+    border-bottom: black 2px;
+    width: 98%;
+}

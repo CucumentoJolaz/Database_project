@@ -1,0 +1,11 @@
+{% for folder in folders %}
+    {% if not folder.deleted %}
+        {% load static %}
+        <div class="fileContainer">
+            <a href="{% url 'prFold_uid' folder.UID %}">
+                <image src="{% static 'general/images/folder.png' %}" class="tableImage"></image>
+                {{ folder.title }}
+            </a>
+        </div>
+    {% endif %}
+{% endfor %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+
+
+{% block navBarPrimal %}
+
+    <a class="navbar-brand" href="{% url 'home' %}">База данных</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'prFold' %}">На главную страницу</a>
+            </li>
+        </ul>
+    </div>
+{% endblock %}
