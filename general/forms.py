@@ -24,6 +24,7 @@ class abstractFolderForm(forms.ModelForm):
         instance.path = path
         instance.tableName = tableName
         createDir("/".join([instance.path, newUID]))
+        print(instance.path.rsplit("/")[-1])
         q = excelFolder.objects.get(UID=instance.path.rsplit("/")[-1])  # ищем ту директорию, в которую созраняется файл
         instance.parentFolder = q  # присваиваем файл к данной директории
         if commit:

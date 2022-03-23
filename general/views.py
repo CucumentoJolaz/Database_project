@@ -1,149 +1,111 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
-from django.conf import settings
-from django.http import HttpResponse, HttpResponseNotFound
-from django.core.files.storage import FileSystemStorage
-import mimetypes
+from django.http import HttpResponseNotFound
 
-from general.functions.prFold_init import prFoldInitialise
-from general.models import excelFolder, excelFile
-from general.forms import excelFileForm, excelFolderForm
-from config.settings import MEDIA_ROOT
-
-import general.functions.db_init as dbIn
-
-import boto3
-import os
-
-
-def test(request):
-    return HttpResponse("Test")
+from general.functions.views.delete import processDelete
+from general.functions.views.download import processDownloadFile
+from general.functions.views.new_folder import processNewFolder, initialiseNewFolder
+from general.functions.views.prFold_init import initialisePrFold
+from general.functions.views.rename import processRenameFile, processRenameFolder
+from general.functions.views.upload_file import processUploadFile, initialiseUploadFile
+from general.models import excelFolder
 
 
 @login_required
 def home(request):
-    """View with home template rendering"""
-    return render(request, 'home.html')
+    """
+    Home template rendering.
+    home(request):
+    """
+    return render(request, "home.html")
 
 
-# main folder evaluation
 @login_required
-def prFold(request, *args, **kwargs):
-    """Main function of 'general' app. Generate a 'folder' with it's belongings like tables, files and folders."""
-    # checking if database initialised correctly
-    if not dbIn.dbCheckInit():
-        dbIn.dbInit()
-    folderUID = kwargs.get('fold_uid', 'prFold')
-    # Handling main folder structure
-    theFolderObject = excelFolder.objects.get(UID=folderUID)
-    renderDict = prFoldInitialise(theFolderObject)
-    renderDict.update({'theFolderObject': theFolderObject,})
-    return render(request, 'general/prFold.html', renderDict)
+def prFold(request, **kwargs):
+    """
+    Accept a request and render excelFolder HTML page.
+    prFold(request, **kwargs)
+    """
+    folderUID = kwargs.get("fold_uid", "prFold")
+    renderDict = initialisePrFold(theFolderObject=excelFolder.objects.get(UID=folderUID))
+    return render(request, "general/prFold.html", renderDict)
 
 
 @login_required
 def newExcelFolder(request):
-    """ Form creation function for new folders"""
-    if request.method == 'POST':
-        form = excelFolderForm(request.POST)
-        if form.is_valid():
-            form.save(author=request.user, path=request.POST['path'],
-                      tableName=request.POST["tableName"])
-        else:
-            print(form.is_valid())
+    """
+    If request is POST type - Creating new folder, if request is appropriate;
+    If request is GET type - initialising appropriate data from request, combine it to
+    render dictionary, and render if in general/createFolder.html.
+    newExcelFolder(request)
+    """
+    if request.method == "POST":
+        processNewFolder(request)
         return redirect(request.POST['pathBack'])
 
-    form = excelFolderForm()
-    if 'path' in request.GET and 'pathBack' in request.GET:
-        return render(request, 'general/createFolder.html', {'excelFolderForm': form,
-                                                             'path': request.GET['path'],
-                                                             'pathBack': request.GET['pathBack']})
-    else:
-        return redirect('home')
+    if request.method == "GET":
+        renderDict = initialiseNewFolder(request)
+        return render(request, "general/createFolder.html", renderDict)
 
 
 @login_required
 def uploadExcelFile(request):
-    """Uploading new file into a folder"""
-    if request.method == 'POST':
-        fileTitle = request.FILES['file'].name
-        form = excelFileForm(request.POST, request.FILES, )
-        if form.is_valid():
-            form.save(title=fileTitle,
-                      author=request.user,
-                      )
-        else:
-            print("Form is not valid")
+    """
+    If request is POST type - uploading new file, if request is appropriate;
+    If request is GET type - initialising appropriate data from request, combine it to
+    render dictionary, and render if in general/uploadFile.html.
+    uploadExcelFile(request)
+    """
+    if request.method == "POST":
+        processUploadFile(request)
         return redirect(request.POST['pathBack'])
 
-    form = excelFileForm()
-    if 'path' in request.GET and 'pathBack' in request.GET:
-        return render(request, 'general/uploadFile.html', {'excelFileForm': form,
-                                                           'path': request.GET['path'],
-                                                           'pathBack': request.GET['pathBack']})
+    if request.method == "GET":
+        renderDict = initialiseUploadFile(request)
+        return render(request, "general/uploadFile.html", renderDict)
+
+
+@login_required
+def deleteExcel(request, **kwargs):
+    """
+    Deletion view for folder of file by request, Only POST.
+    deleteExcel(request, **kwargs)
+    """
+    if request.method == "POST":
+        processDelete(**kwargs)
+        return redirect(f"/{request.POST['pathBack']}")
+
+
+@login_required
+def renameExcelFile(request, **kwargs):
+    """
+    View for renaming and changing additionalInfo of excelFile instance.
+    renameExcelFile(request, **kwargs)
+    """
+    if request.method == 'POST':
+        processRenameFile(request, **kwargs)
+        return redirect(f"/{request.POST['pathBack']}")
+
+
+@login_required
+def renameExcelFolder(request, **kwargs):
+    """
+    View for renaming  of excelFolder instance.
+    renameExcelFile(request, **kwargs)
+    """
+    if request.method == 'POST':
+        processRenameFolder(request, **kwargs)
+        return redirect(f"/{request.POST['pathBack']}")
+
+
+@login_required
+def downloadExcelFile(request, **kwargs):
+    """
+    View for downloading file from cloud server/database.
+    downloadExcelFile(request, **kwargs)
+    """
+    downloadedFile = processDownloadFile(**kwargs)
+    if downloadedFile:
+        return downloadedFile
     else:
-        redirect('home')
-
-
-@login_required
-def deleteExcel(request, pk, type):
-    """Deleting file from the structure"""
-    if request.method == 'POST':
-        if type == 'file':
-            book = excelFile.objects.get(pk=pk)
-            book.falseDeletion()
-        elif type == 'folder':
-            book = excelFolder.objects.get(pk=pk)
-            book.falseDeletion()
-        else:
-            return redirect('home')
-
-        if request.POST['pathBack'].split('/')[0] == 'prFold':
-            return redirect('/' + request.POST['pathBack'])
-        return redirect(request.POST['pathBack'])
-
-
-@login_required
-def renameExcelFile(request, pk):
-    if request.method == 'POST':
-        book = excelFile.objects.get(pk=pk)
-        if 'newTitle' in request.POST:
-            book.rename(request.POST['newTitle'])
-        if 'additionalInfo' in request.POST:
-            book.additionalInfo = request.POST['additionalInfo']
-        book.save()
-    return redirect("/" + request.POST['pathBack'])
-
-
-@login_required
-def renameExcelFolder(request, pk):
-    if request.method == 'POST':
-        if request.POST['newTitle'] != "":
-            book = excelFolder.objects.get(pk=pk)
-            book.rename(request.POST['newTitle'])
-    return redirect("/" + request.POST['pathBack'])
-
-
-@login_required
-def downloadExcelFile(request, pk):
-    file = excelFile.objects.get(pk=pk)
-    fileName = file.title
-    filePath = file.path + "/" + file.UID
-    mime_type, _ = mimetypes.guess_type(filePath)
-    bufferFileName = os.path.join(MEDIA_ROOT, "buffer", fileName)
-
-    BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
-    s3 = boto3.resource('s3')
-    bucket = s3.Bucket(BUCKET_NAME)
-    bucket.download_file(filePath, bufferFileName)
-
-    fs = FileSystemStorage()
-    if fs.exists(bufferFileName):
-        with fs.open(bufferFileName) as file:
-            mime_type, _ = mimetypes.guess_type(bufferFileName)
-            response = HttpResponse(file, content_type=mime_type)
-            response['Content-Disposition'] = 'attachment; filename="' + fileName + '"'
-            os.remove(bufferFileName)
-            return response
-    else:
-        return HttpResponseNotFound('The file wasnt found at the server')
+        return HttpResponseNotFound('The file was not found at the server')

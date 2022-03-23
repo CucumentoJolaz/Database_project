@@ -1,13 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import User
 import os
-import shutil
-from config.settings import MEDIA_ROOT
 
 
-def content_file_name(instance, UID):
-    """ this function has to return the location to upload the file """
-    return os.path.join('%s/%s' % (instance.path, instance.UID))
+def contentFileName(instance, filename):
+    """
+    Function alias in django script upload "upload_to".
+    To be used as an appropriate filename generator.
+    Second argument through not used, still necessary.
+     """
+    return os.path.join(f"{instance.path}/{instance.UID}")
 
 
 class UIDlist(models.Model):
@@ -41,7 +43,7 @@ class abstractFolder(models.Model):
     # restore all that info, he/she will need to use special
     # equipment to do so
     def delete(self, *args, **kwargs):
-        shutil.rmtree(os.path.join(MEDIA_ROOT, self.path, self.UID))
+        # shutil.rmtree(os.path.join(MEDIA_ROOT, self.path, self.UID))
         # Removal of the all directories, which the directory contain
         folderDeletion = excelFolder.objects.filter(path__startswith=self.path + "/" + self.UID)
         # Removal of the all files, which the directory contain
@@ -83,7 +85,7 @@ class excelFolder(abstractFolder):
 class excelFile(models.Model):
     title = models.CharField(max_length=100)
     author = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
-    file = models.FileField(upload_to=content_file_name)
+    file = models.FileField(upload_to=contentFileName)
     creationDate = models.DateTimeField(auto_now_add=True)
     updateDate = models.DateTimeField(auto_now=True)
     path = models.CharField(max_length=500, default="prFold")

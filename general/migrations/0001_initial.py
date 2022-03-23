@@ -86,7 +86,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('title', models.CharField(max_length=100)),
                 ('author', models.CharField(max_length=100)),
-                ('file', models.FileField(upload_to=general.models.content_file_name)),
+                ('file', models.FileField(upload_to=general.models.contentFileName)),
                 ('creationDate', models.DateTimeField(auto_now_add=True)),
                 ('path', models.CharField(default='prFold', max_length=500)),
                 ('UID', models.CharField(default='', max_length=300)),

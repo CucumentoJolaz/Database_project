@@ -1,4 +1,4 @@
-import tables.functions.table_check as tc
+import tables.functions.table.processor as tc
 import general.functions.tree_folders as genFunc
 
 
